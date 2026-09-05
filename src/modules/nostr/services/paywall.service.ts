@@ -112,6 +112,24 @@ export class PaywallService implements OnModuleInit {
     return found.length > 0;
   }
 
+  /**
+   * 수납 후 저장이 실패했을 때. 원장을 failed 로 되돌리고 크게 남긴다.
+   *
+   * 인밴드 환불은 불가능하다 — 코어가 이미 OK 를 보낸 뒤이고, 같은 event id 로
+   * OK 를 두 번 보내면 클라가 두 번째를 버린다. 대신 proofs 가 원장에 남아 있으므로
+   * 운영자가 수동 회수할 수 있다. 그래서 조용히 넘기지 않고 error 로 찍는다.
+   */
+  async onStorageFailedAfterCollect(
+    eventId: string,
+    outcome: { amountMsat: number; refundToken: string | null },
+  ): Promise<void> {
+    const message = await this.guard!.onStorageFailed(eventId, outcome.refundToken);
+    this.logger.error(
+      { eventId, amountMsat: outcome.amountMsat, refundToken: outcome.refundToken, message },
+      '수납 후 저장 실패 — 원장의 proofs 로 수동 회수할 것 (인밴드 환불 불가)',
+    );
+  }
+
   onApplicationShutdown(): void {
     this.repository?.close();
   }
