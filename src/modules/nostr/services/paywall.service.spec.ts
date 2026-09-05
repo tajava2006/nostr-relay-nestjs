@@ -79,12 +79,12 @@ describe('PaywallService', () => {
   });
 
   describe('설정', () => {
-    it('민트 목록은 콤마 구분 + 끝 슬래시 정규화', () => {
-      const c = paywallConfig({
-        PAYWALL_ENABLED: true,
-        PAYWALL_MINTS: ' https://a/ , https://b ,, ',
-      } as never);
-      expect(c.mints).toEqual(['https://a', 'https://b']);
+    it('민트가 배열로 와도 문자열로 와도 받는다 — tryToParse 가 콤마를 만나면 배열로 쪼갠다', () => {
+      // 민트 1개면 문자열, 2개 이상이면 배열로 도착한다(config/environment.ts 의 preprocess).
+      expect(paywallConfig({ PAYWALL_MINTS: 'https://a/' } as never).mints).toEqual(['https://a']);
+      expect(
+        paywallConfig({ PAYWALL_MINTS: [' https://a/ ', 'https://b', ''] } as never).mints,
+      ).toEqual(['https://a', 'https://b']);
     });
 
     it('NIP-11 에 실릴 terms 와 가드가 같은 객체를 본다', () => {

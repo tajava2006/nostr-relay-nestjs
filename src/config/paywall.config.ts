@@ -11,9 +11,11 @@ import { Environment } from './environment';
  * 이 파일이 유일한 사본이고, 잃으면 걷은 돈이 그대로 증발한다. 백업 대상.
  */
 export function paywallConfig(env: Environment) {
-  const mints = (env.PAYWALL_MINTS ?? '')
-    .split(',')
-    .map((m) => m.trim().replace(/\/+$/, ''))
+  // zod 의 arraySchema 가 항상 배열로 만들어주지만, 문자열이 그대로 와도 받는다
+  // (설정 함수를 직접 부르는 호출자를 위한 방어).
+  const raw = env.PAYWALL_MINTS ?? [];
+  const mints = (Array.isArray(raw) ? raw : [raw])
+    .map((m) => String(m).trim().replace(/\/+$/, ''))
     .filter((m) => m.length > 0);
 
   const priceMsat = env.PAYWALL_PRICE_MSAT ?? 1000;

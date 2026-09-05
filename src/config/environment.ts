@@ -37,7 +37,9 @@ export const EnvironmentSchema = z.object({
   // 기본 off. 켜기 전엔 릴레이 동작이 원래와 동일하다.
   PAYWALL_ENABLED: z.boolean().optional(),
   // 콤마 구분. 전부 input_fee_ppk==0 이어야 한다(부팅 게이트가 검사한다).
-  PAYWALL_MINTS: z.string().optional(),
+  // ⚠️ preprocess 의 tryToParse 가 콤마를 만나면 배열로 쪼개므로 문자열/배열 둘 다 받아야 한다
+  //    (민트 1개면 문자열, 2개 이상이면 배열로 도착한다). BLACKLIST 등과 같은 관례.
+  PAYWALL_MINTS: arraySchema(z.string()).optional(),
   // ⚠️ 캐시가 아니라 자산 원장이다. 잃으면 걷은 ecash 가 증발한다.
   PAYWALL_LEDGER_PATH: z.string().optional(),
   PAYWALL_PRICE_MSAT: z.number().int().positive().optional(),
