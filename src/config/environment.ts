@@ -33,6 +33,15 @@ export const EnvironmentSchema = z.object({
     .optional(),
   RELAY_CONTACT: z.string().optional(),
 
+  /*==== paywall (이벤트 단위 유료 발행) ====*/
+  // 기본 off. 켜기 전엔 릴레이 동작이 원래와 동일하다.
+  PAYWALL_ENABLED: z.boolean().optional(),
+  // 콤마 구분. 전부 input_fee_ppk==0 이어야 한다(부팅 게이트가 검사한다).
+  PAYWALL_MINTS: z.string().optional(),
+  // ⚠️ 캐시가 아니라 자산 원장이다. 잃으면 걷은 ecash 가 증발한다.
+  PAYWALL_LEDGER_PATH: z.string().optional(),
+  PAYWALL_PRICE_MSAT: z.number().int().positive().optional(),
+
   CREATED_AT_UPPER_LIMIT: z.number().int().positive().optional(),
   CREATED_AT_LOWER_LIMIT: z.number().int().positive().optional(),
   MIN_POW_DIFFICULTY: z.number().int().positive().optional(),

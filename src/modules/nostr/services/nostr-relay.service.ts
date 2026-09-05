@@ -20,7 +20,12 @@ import { WotService } from '../../../modules/wot/wot.service';
 import { MetricService } from '../../metric/metric.service';
 import { EventRepository } from '../../repositories/event.repository';
 import { NostrRelayLogger } from '../../share/nostr-relay-logger.service';
-import { BlacklistGuardPlugin, WhitelistGuardPlugin } from '../plugins';
+import {
+  BlacklistGuardPlugin,
+  PaywallGuardPlugin,
+  WhitelistGuardPlugin,
+} from '../plugins';
+import { PaywallService } from './paywall.service';
 
 @Injectable()
 export class NostrRelayService implements OnApplicationShutdown {
@@ -37,6 +42,7 @@ export class NostrRelayService implements OnApplicationShutdown {
     eventRepository: EventRepository,
     configService: ConfigService<Config, true>,
     wotService: WotService,
+    private readonly paywall: PaywallService,
   ) {
     const hostname = configService.get('hostname');
     const {
@@ -84,6 +90,11 @@ export class NostrRelayService implements OnApplicationShutdown {
 
     this.relay.register(orGuardPlugin);
     this.relay.register(createdAtLimitGuardPlugin);
+
+    // 꺼져 있으면 등록조차 하지 않는다 — 릴레이 동작이 원래와 완전히 같아진다.
+    if (this.paywall.enabled) {
+      this.relay.register(new PaywallGuardPlugin(this.paywall));
+    }
   }
 
   onApplicationShutdown() {
@@ -103,7 +114,10 @@ export class NostrRelayService implements OnApplicationShutdown {
   async handleMessage(client: WebSocket, data: Array<any>) {
     try {
       const start = Date.now();
-      const msg = await this.validator.validateIncomingMessage(data);
+      // 결제 봉투를 **검증 전에** 떼어낸다. validator 의 EVENT 스키마가
+      // z.tuple([...2개]) 라 3원소를 거부하기 때문. 꺼져 있으면 data 를 그대로 돌려준다.
+      const incoming = this.paywall.takeEnvelope(data);
+      const msg = await this.validator.validateIncomingMessage(incoming);
       if (!this.messageHandlingConfig[msg[0].toLowerCase()]) {
         return;
       }

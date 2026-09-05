@@ -9,6 +9,7 @@ import { MetricService } from '../../metric/metric.service';
 import { EventRepository } from '../../repositories/event.repository';
 import { NostrRelayLogger } from '../../share/nostr-relay-logger.service';
 import { NostrRelayService } from './nostr-relay.service';
+import { PaywallService } from './paywall.service';
 
 describe('NostrRelayService', () => {
   let nostrRelayService: NostrRelayService;
@@ -42,6 +43,11 @@ describe('NostrRelayService', () => {
         }),
       }),
       createMock<WotService>(),
+      // paywall 이 꺼져 있으면 릴레이 동작은 원래와 완전히 같다.
+      createMock<PaywallService>({
+        enabled: false,
+        takeEnvelope: ((d: unknown[]) => d) as never,
+      }),
     );
   });
 

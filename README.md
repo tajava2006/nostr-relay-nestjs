@@ -36,6 +36,30 @@ If you'd like to help me test the reliability of this relay implementation, you 
 
 ## Extra Features
 
+### Paywall (pay-per-event)
+
+Charge sats for events that demand someone else's attention. Reading stays free; only
+writes that notify or auto-expose others are priced. Implemented with
+[`@nostr-paywall`](https://github.com/tajava2006/nostr-paywall).
+
+Off by default. With `PAYWALL_ENABLED` unset the relay behaves exactly as before —
+the guard is not even registered.
+
+- `PAYWALL_ENABLED`: turn it on (default `false`).
+- `PAYWALL_MINTS`: comma-separated Cashu mint allowlist. **Every mint must have
+  `input_fee_ppk == 0`** — with a non-zero swap fee a 1 sat payment is impossible
+  (NUT-02: `fees = ceil(sum(input_fee_ppk)/1000)`, so 1 sat in leaves 0 sat out).
+  The relay checks this at boot and refuses to start otherwise.
+- `PAYWALL_LEDGER_PATH`: SQLite file for the payment ledger (default
+  `./paywall-ledger.db`). **This is an asset store, not a cache** — collected ecash is
+  bearer money and this file is the only copy. Back it up.
+- `PAYWALL_PRICE_MSAT`: price per chargeable event (default `1000`, i.e. 1 sat).
+
+Clients pay by attaching a payment envelope as a third element of the `EVENT` message:
+`["EVENT", <event>, <payment>]`. Terms are advertised in the NIP-11 document
+(`fees.publication` + `payment_v1`), which clients fetch after receiving a
+`payment-required:` response.
+
 ### WoT (Web of Trust)
 
 If you want to enable the WoT feature, you need to set the following environment variables:

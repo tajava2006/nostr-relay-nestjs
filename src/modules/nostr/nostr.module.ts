@@ -8,11 +8,12 @@ import { NostrController } from './controllers/nostr.controller';
 import { NostrGateway } from './gateway/nostr.gateway';
 import { EventService } from './services/event.service';
 import { NostrRelayService } from './services/nostr-relay.service';
+import { PaywallService } from './services/paywall.service';
 
 @Module({
   imports: [ShareModule, RepositoriesModule, WotModule, MetricModule],
   controllers: [NostrController, EventController],
-  providers: [NostrGateway, EventService, NostrRelayService],
+  providers: [NostrGateway, EventService, NostrRelayService, PaywallService],
   exports: [NostrRelayService],
 })
 export class NostrModule {}

@@ -5,6 +5,7 @@ import { limitConfig } from './limit.config';
 import { loggerConfig } from './logger.config';
 import { meiliSearchConfig } from './meili-search.config';
 import { messageHandlingConfig } from './message-handling.config';
+import { paywallConfig } from './paywall.config';
 import { relayInfoConfig } from './relay-info.config';
 import { throttlerConfig } from './throttler.config';
 import { wotConfig } from './wot.config';
@@ -24,6 +25,7 @@ export function config() {
     cache: cacheConfig(env),
     messageHandling: messageHandlingConfig(env),
     wot: wotConfig(env),
+    paywall: paywallConfig(env),
   };
 }
 export type Config = ReturnType<typeof config>;

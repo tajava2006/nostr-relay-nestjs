@@ -32,6 +32,12 @@ export class NostrController {
       created_at_upper_limit?: number;
     };
     retention: [{ time: null }];
+    // 유료 발행일 때만. 클라는 payment-required 를 받은 뒤 이 문서를 lazy fetch 한다.
+    fees?: { publication: unknown[] };
+    payment_v1?: {
+      envelope_in_event_message: boolean;
+      methods: unknown[];
+    };
   };
 
   constructor(configService: ConfigService<Config, true>) {
@@ -43,6 +49,8 @@ export class NostrController {
     if (hostname) {
       supported_nips.push(42);
     }
+
+    const paywall = configService.get('paywall', { infer: true });
 
     const meiliSearchConfig = configService.get('meiliSearch', { infer: true });
     if (meiliSearchConfig.apiKey && meiliSearchConfig.host) {
@@ -68,13 +76,24 @@ export class NostrController {
         max_content_length: 102400,
         min_pow_difficulty: limitConfig.minPowDifficulty,
         auth_required: false,
-        payment_required: false,
-        restricted_writes: false,
+        payment_required: paywall.enabled,
+        restricted_writes: paywall.enabled,
         created_at_lower_limit: limitConfig.createdAtLowerLimit,
         created_at_upper_limit: limitConfig.createdAtUpperLimit,
       },
       retention: [{ time: null }],
     };
+
+    // 조건·수단을 기계가 읽을 수 있게 싣는다. **가드와 같은 terms 객체**라 갈릴 수 없다.
+    // 아무도 NIP-11 을 선제적으로 읽지 않지만, payment-required 를 받은 뒤엔 읽는다 —
+    // 웹소켓과 같은 URL 이라 별도 엔드포인트도 필요 없다.
+    if (paywall.enabled) {
+      this.relayInfoDoc.fees = { publication: paywall.terms.rules };
+      this.relayInfoDoc.payment_v1 = {
+        envelope_in_event_message: paywall.terms.envelopeInEventMessage,
+        methods: paywall.terms.methods,
+      };
+    }
   }
 
   @Get()
